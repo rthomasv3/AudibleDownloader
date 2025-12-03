@@ -1,9 +1,11 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, inject } from 'vue'
 import { Icon } from '@iconify/vue';
 import MergeDialog from './MergeDialog.vue';
 
 var searchTimeout = null;
+
+const settings = inject("settings");
 
 const isLoading = ref(true);
 const libraryItems = ref([]);
@@ -42,12 +44,20 @@ watch(
     { deep: true }
 );
 
+watch(settings, async (newSettings) => {
+    await refreshLibrary();
+})
+
 onMounted(async () => {
+    await refreshLibrary();
+});
+
+async function refreshLibrary() {
     await getLibrary();
     getSearchOptions();
     searchLibrary();
     isLoading.value = false;
-});
+}
 
 async function getLibrary() {
     isLoading.value = true;

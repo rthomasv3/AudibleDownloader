@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="AAXClean" Version="2.1.0.1" />
-    <PackageReference Include="Galdr.Native" Version="1.0.8-dev4" />
+    <PackageReference Include="Galdr.Native" Version="1.0.8" />
   </ItemGroup>
 
   <ItemGroup>

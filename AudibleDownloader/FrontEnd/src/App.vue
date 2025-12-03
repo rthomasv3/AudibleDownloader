@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onBeforeMount, watch } from "vue";
+import { ref, onBeforeMount, watch, provide } from "vue";
 import { useRouter } from "vue-router";
 import { useRoute } from "vue-router";
 import { Icon } from "@iconify/vue";
@@ -11,6 +11,9 @@ const route = useRoute();
 const isLoggedIn = ref(false);
 const deviceName = ref(false);
 const settingsVisible = ref(false);
+
+const settings = ref();
+provide("settings", settings);
 
 watch(route, async (newRoute) => {
   const loginStatusResult = await galdrInvoke("getLoginStatus");
@@ -39,6 +42,12 @@ onBeforeMount(async () => {
 function onLogout() {
   isLoggedIn.value = false;
 }
+
+function onLibraryPathUpdated(libraryPath) {
+  settings.value = {
+    libraryPath: libraryPath
+  };
+}
 </script>
 
 <template>
@@ -60,7 +69,7 @@ function onLogout() {
       <RouterView />
     </div>
 
-    <SettingsDialog v-model:visible="settingsVisible" @logout="onLogout" />
+    <SettingsDialog v-model:visible="settingsVisible" @logout="onLogout" @libraryPathUpdated="onLibraryPathUpdated" />
 
     <!-- <footer class="py-12 footer-container">
     </footer> -->

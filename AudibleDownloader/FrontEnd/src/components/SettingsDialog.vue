@@ -9,7 +9,7 @@ const confirm = useConfirm();
 const router = useRouter();
 
 const visible = defineModel("visible");
-const emit = defineEmits(["logout"]);
+const emit = defineEmits(["logout", "libraryPathUpdated"]);
 
 const libraryPath = ref();
 
@@ -23,6 +23,7 @@ async function browseDirectory() {
     if (result && result.selectedDirectory) {
         libraryPath.value = result.selectedDirectory;
         await galdrInvoke("updateLibraryPath", { newPath: libraryPath.value });
+        emit("libraryPathUpdated", libraryPath.value);
     }
 }
 
