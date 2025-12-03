@@ -182,6 +182,8 @@ internal class Program
                 Directory.CreateDirectory(saveFileFolder);
             }
 
+            await client.GetActivationBytesAsync();
+
             for (int i = 0; i < encryptedBookDataParts.Count; i++)
             {
                 DecryptedBookResult decryptedBook = await client.DecryptBook(encryptedBookDataParts[i]);
