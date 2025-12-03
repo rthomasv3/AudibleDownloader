@@ -5,5 +5,5 @@ namespace AudibleDownloader.Models.Audible;
 internal class DeregisterResponseWrapper
 {
     [JsonPropertyName("success")]
-    public bool Success { get; set; }
+    public object Success { get; set; }
 }

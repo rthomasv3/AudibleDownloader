@@ -1,14 +1,18 @@
 <script setup>
-import { ref, onBeforeMount } from "vue";
-import ThemeToggler from "./components/ThemeToggler.vue";
+import { ref, onBeforeMount, watch } from "vue";
+import { useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 import { Icon } from "@iconify/vue";
 import SettingsDialog from "./components/SettingsDialog.vue";
+
+const router = useRouter();
+const route = useRoute();
 
 const isLoggedIn = ref(false);
 const deviceName = ref(false);
 const settingsVisible = ref(false);
 
-onBeforeMount(async () => {
+watch(route, async (newRoute) => {
   const loginStatusResult = await galdrInvoke("getLoginStatus");
   isLoggedIn.value = loginStatusResult.isLoggedIn;
 
@@ -17,19 +21,32 @@ onBeforeMount(async () => {
     deviceName.value = clientInfo.deviceName;
   }
 });
+
+onBeforeMount(async () => {
+  const loginStatusResult = await galdrInvoke("getLoginStatus");
+  isLoggedIn.value = loginStatusResult.isLoggedIn;
+
+  if (isLoggedIn.value) {
+    const clientInfo = await galdrInvoke("getClientInfo");
+    deviceName.value = clientInfo.deviceName;
+  } else {
+    if (!window.location.href.includes("/loading")) {
+      await router.push("/login");
+    }
+  }
+});
+
+function onLogout() {
+  isLoggedIn.value = false;
+}
 </script>
 
 <template>
   <div class="layout">
-    <div class="layout-topbar shadow-md">
+    <div v-if="isLoggedIn" class="layout-topbar shadow-md">
       <div class="layout-topbar-inner flex justify-between items-center">
         <p>{{ deviceName }}</p>
         <div class="flex gap-4 items-center">
-          <!-- <Button size="small" severity="secondary" variant="text" class="!h-6.5 !w-6.5 !p-1" rounded
-            v-tooltip="{ value: 'Logout', showDelay: 1000, hideDelay: 300 }" @click="settingsVisible = true">
-            <Icon icon="material-symbols:settings-outline-rounded" />
-          </Button> -->
-
           <Button size="small" severity="secondary" variant="text" class="!p-0" rounded @click="settingsVisible = true">
             <template #icon>
               <Icon icon="material-symbols:settings-outline-rounded" width="18" height="18" />
@@ -43,7 +60,7 @@ onBeforeMount(async () => {
       <RouterView />
     </div>
 
-    <SettingsDialog v-model:visible="settingsVisible" />
+    <SettingsDialog v-model:visible="settingsVisible" @logout="onLogout" />
 
     <!-- <footer class="py-12 footer-container">
     </footer> -->

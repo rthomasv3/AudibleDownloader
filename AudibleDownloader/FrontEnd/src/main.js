@@ -3,6 +3,7 @@ import router from "./router";
 import PrimeVue from "primevue/config";
 import { definePreset } from "@primeuix/themes";
 import Aura from "@primeuix/themes/aura";
+import ConfirmationService from "primevue/confirmationservice";
 import "./style.css";
 import App from "./App.vue";
 
@@ -36,5 +37,6 @@ app.use(PrimeVue, {
 });
 
 app.use(router);
+app.use(ConfirmationService);
 
 app.mount("#app");

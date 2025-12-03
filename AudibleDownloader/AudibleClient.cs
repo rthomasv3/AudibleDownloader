@@ -252,10 +252,11 @@ internal class AudibleClient : IDisposable
         request.Content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
         request.Headers.Add("Authorization", $"Bearer {_auth.AccessToken}");
 
-        HttpResponseMessage response = await _httpClient.PostAsync(url, request.Content);
+        HttpResponseMessage response = await _httpClient.SendAsync(request);
+        string responseBody = await response.Content.ReadAsStringAsync();
+
         response.EnsureSuccessStatusCode();
 
-        string responseBody = await response.Content.ReadAsStringAsync();
         DeregisterResponse deregisterResponse = JsonSerializer.Deserialize(responseBody, AudibleJsonContext.Default.DeregisterResponse);
 
         return deregisterResponse;

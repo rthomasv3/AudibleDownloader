@@ -2,8 +2,15 @@
 import { ref } from "vue";
 import ThemeToggler from "./ThemeToggler.vue";
 import { Icon } from "@iconify/vue";
+import { useConfirm } from "primevue/useconfirm";
+import { useRouter } from "vue-router";
+
+const confirm = useConfirm();
+const router = useRouter();
 
 const visible = defineModel("visible");
+const emit = defineEmits(["logout"]);
+
 const libraryPath = ref();
 
 async function onShown() {
@@ -19,8 +26,28 @@ async function browseDirectory() {
     }
 }
 
-function confirmLogout() {
-
+function confirmLogout(event) {
+    confirm.require({
+        target: event.currentTarget,
+        message: 'This will log you out and unregister this device',
+        rejectProps: {
+            label: 'Cancel',
+            severity: 'secondary',
+            outlined: true
+        },
+        acceptProps: {
+            label: 'Logout',
+            severity: 'danger',
+        },
+        accept: async () => {
+            const logoutResult = await galdrInvoke("logoutAndUnregister");
+            if (logoutResult && logoutResult.success) {
+                visible.value = false;
+                await router.push("/login");
+                emit("logout");
+            }
+        },
+    });
 }
 </script>
 
@@ -48,6 +75,7 @@ function confirmLogout() {
             </div>
 
             <div class="flex justify-between gap-2">
+                <ConfirmPopup></ConfirmPopup>
                 <Button class="w-24" type="button" label="Logout" severity="danger" @click="confirmLogout"></Button>
                 <Button class="w-24" type="button" label="Close" @click="visible = false"></Button>
             </div>

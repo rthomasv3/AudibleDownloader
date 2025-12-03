@@ -59,15 +59,19 @@ internal class Program
 
         builder.AddFunction("getOAuthUrl", async (AudibleRegister register) =>
         {
-            return register.GenerateAudibleSignInUrl();
+            return new GetOAuthUrlResult()
+            {
+                Url = register.GenerateAudibleSignInUrl()
+            };
         });
 
-        builder.AddAction("onAuthorizationCodeFound", async (string url, AudibleRegister register) =>
+        builder.AddAction("onAuthorizationCodeFound", async (string url, AudibleRegister register, Config config) =>
         {
             if (url.Contains("openid.oa2.authorization_code="))
             {
                 register.ExtractAuthorizationCode(url);
                 await register.CreateAuthFileAsync();
+                config.IsLoggedIn = File.Exists(config.AuthFilePath);
             }
         });
 
@@ -291,12 +295,20 @@ internal class Program
         {
             bool success = false;
 
-            DeregisterResponse response = await client.DeregisterAsync();
-            success = response?.Response?.Success ?? false;
-
-            if (success && File.Exists(config.AuthFilePath))
+            try
             {
-                File.Delete(config.AuthFilePath);
+                DeregisterResponse response = await client.DeregisterAsync();
+                success = response?.Response?.Success != null;
+
+                if (success && File.Exists(config.AuthFilePath))
+                {
+                    File.Delete(config.AuthFilePath);
+                    config.IsLoggedIn = false;
+                }
+            }
+            catch (Exception ex)
+            {
+
             }
 
             return new LogoutResult()
@@ -335,30 +347,21 @@ internal class Program
                         if (url.includes('openid.oa2.authorization_code=')) {
                             // Call C# callback
                             galdrInvoke('onAuthorizationCodeFound', { url: url });
-                            window.location.href = 'http://localhost:{{PORT}}';
+                            window.location.href = 'http://localhost:{{PORT}}/loading';
                         }
                     }
                 })();
             ".Replace("{{PORT}}", port.ToString());
     }
 
-    static bool IsBookDownloaded(string directory)
-    {
-        bool isDownloaded = false;
-
-        if (Directory.Exists(directory))
-        {
-            int m4aFileCount = Directory.GetFiles(directory, "*.m4a").Length;
-            isDownloaded = m4aFileCount > 0;
-        }
-
-        return isDownloaded;
-    }
-
     static Config LoadConfig()
     {
         Config config = new()
         {
+            AuthFilePath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "AudibleDownloader",
+                "auth.json"),
             LibraryPath = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "AudibleDownloader",

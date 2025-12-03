@@ -16,11 +16,18 @@ namespace AudibleDownloader;
 
 internal class AudibleRegister
 {
+    private readonly Config _config;
+
     private string _authCode;
     private string _codeVerifier;
     private string _codeChallenge;
     private string _domain;
     private string _serial;
+
+    public AudibleRegister(Config config)
+    {
+        _config = config;
+    }
 
     public async Task CreateAuthFileAsync()
     {
@@ -43,7 +50,7 @@ internal class AudibleRegister
 
         string authJson = JsonSerializer.Serialize(authFile, AudibleJsonContext.Default.AuthFile);
 
-        File.WriteAllText("auth.json", authJson);
+        File.WriteAllText(_config.AuthFilePath, authJson);
     }
 
     public async Task CreateAuthFileAsync(AuthResult authResult)
@@ -67,7 +74,7 @@ internal class AudibleRegister
 
         string authJson = JsonSerializer.Serialize(authFile, AudibleJsonContext.Default.AuthFile);
 
-        File.WriteAllText("auth.json", authJson);
+        File.WriteAllText(_config.AuthFilePath, authJson);
     }
 
     public string GenerateAudibleSignInUrl(string countryCode = "us", string domain = "com", string marketPlaceId = "AF2M0KC94RCEA")

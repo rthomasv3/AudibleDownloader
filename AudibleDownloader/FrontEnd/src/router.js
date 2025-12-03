@@ -2,11 +2,15 @@ import { nextTick } from "vue";
 import { createWebHistory, createRouter } from "vue-router";
 
 const Library = () => import("./components/Library.vue");
+const Login = () => import("./components/Login.vue");
+const Loading = () => import("./components/Loading.vue");
 
 const NotFound = () => import("./components/NotFound.vue");
 
 const routes = [
     { path: "/", component: Library },
+    { path: "/login", component: Login },
+    { path: "/loading", component: Loading },
     { path: "/:pathMatch(.*)*", component: NotFound },
 ];
 
