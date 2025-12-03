@@ -47,7 +47,8 @@ internal class Program
             .AddSingleton<AudibleClient>()
             .AddSingleton<AudibleRegister>()
             .AddSingleton<FFmpegManager>()
-            .AddSingleton<AudibleMerger>();
+            .AddSingleton<AudibleMerger>()
+            .AddSingleton<AuthManager>();
 
         builder.AddFunction("getLoginStatus", (Config Config) =>
         {

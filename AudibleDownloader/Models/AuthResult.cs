@@ -1,4 +1,4 @@
-﻿namespace AudibleDownloader;
+﻿namespace AudibleDownloader.Models;
 
 internal class AuthResult
 {

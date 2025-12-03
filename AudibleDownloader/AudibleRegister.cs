@@ -16,7 +16,9 @@ namespace AudibleDownloader;
 
 internal class AudibleRegister
 {
-    private readonly Config _config;
+    #region Fields
+
+    private readonly AuthManager _authManager;
 
     private string _authCode;
     private string _codeVerifier;
@@ -24,10 +26,18 @@ internal class AudibleRegister
     private string _domain;
     private string _serial;
 
-    public AudibleRegister(Config config)
+    #endregion
+
+    #region Constructor
+
+    public AudibleRegister(AuthManager authManager)
     {
-        _config = config;
+        _authManager = authManager;
     }
+
+    #endregion
+
+    #region Public Methods
 
     public async Task CreateAuthFileAsync()
     {
@@ -48,9 +58,7 @@ internal class AudibleRegister
         RegistrationResponse registrationResponse = JsonSerializer.Deserialize(responseBody, AudibleJsonContext.Default.RegistrationResponse);
         AuthFile authFile = CreateAuthFile(registrationResponse, _domain);
 
-        string authJson = JsonSerializer.Serialize(authFile, AudibleJsonContext.Default.AuthFile);
-
-        File.WriteAllText(_config.AuthFilePath, authJson);
+        _authManager.SaveAuthFile(authFile);
     }
 
     public async Task CreateAuthFileAsync(AuthResult authResult)
@@ -72,9 +80,7 @@ internal class AudibleRegister
         RegistrationResponse registrationResponse = JsonSerializer.Deserialize(responseBody, AudibleJsonContext.Default.RegistrationResponse);
         AuthFile authFile = CreateAuthFile(registrationResponse, authResult.Domain);
 
-        string authJson = JsonSerializer.Serialize(authFile, AudibleJsonContext.Default.AuthFile);
-
-        File.WriteAllText(_config.AuthFilePath, authJson);
+        _authManager.SaveAuthFile(authFile);
     }
 
     public string GenerateAudibleSignInUrl(string countryCode = "us", string domain = "com", string marketPlaceId = "AF2M0KC94RCEA")
@@ -109,6 +115,10 @@ internal class AudibleRegister
 
         return _authCode;
     }
+
+    #endregion
+
+    #region Private Methods
 
     private static string Base64UrlEncode(byte[] bytes)
     {
@@ -312,4 +322,6 @@ internal class AudibleRegister
 
         return countryCode;
     }
+
+    #endregion
 }

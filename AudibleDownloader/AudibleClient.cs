@@ -21,8 +21,8 @@ internal class AudibleClient : IDisposable
     private readonly HttpClient _httpClient;
     private AuthFile _auth;
     private readonly string _apiUrl;
-    private readonly string _authFilePath;
     private RSA _rsaKey;
+    private readonly AuthManager _authManager;
 
     private ConcurrentDictionary<string, DownloadBookProgressResult> _downloadProgress = new();
 
@@ -30,12 +30,11 @@ internal class AudibleClient : IDisposable
 
     #region Constructor(s)
 
-    public AudibleClient(Config config)
+    public AudibleClient(AuthManager authManager)
     {
-        _authFilePath = config.AuthFilePath;
+        _authManager = authManager;
 
-        string authJson = File.ReadAllText(config.AuthFilePath);
-        AuthFile auth = JsonSerializer.Deserialize(authJson, AudibleJsonContext.Default.AuthFile);
+        AuthFile auth = _authManager.GetAuthFile();
 
         if (auth == null)
         {
@@ -505,13 +504,7 @@ internal class AudibleClient : IDisposable
 
     private void SaveAuthFile()
     {
-        string authJson = JsonSerializer.Serialize(_auth, new JsonSerializerOptions
-        {
-            WriteIndented = true,
-            TypeInfoResolver = AudibleJsonContext.Default
-        });
-
-        File.WriteAllText(_authFilePath, authJson);
+        _authManager.SaveAuthFile(_auth);
     }
 
     private async Task<string> GetAsync(string path, Dictionary<string, string> parameters = null)
