@@ -2,9 +2,11 @@
 import { ref, onBeforeMount } from "vue";
 import ThemeToggler from "./components/ThemeToggler.vue";
 import { Icon } from "@iconify/vue";
+import SettingsDialog from "./components/SettingsDialog.vue";
 
 const isLoggedIn = ref(false);
 const deviceName = ref(false);
+const settingsVisible = ref(false);
 
 onBeforeMount(async () => {
   const loginStatusResult = await galdrInvoke("getLoginStatus");
@@ -23,10 +25,15 @@ onBeforeMount(async () => {
       <div class="layout-topbar-inner flex justify-between items-center">
         <p>{{ deviceName }}</p>
         <div class="flex gap-4 items-center">
-          <ThemeToggler />
-          <Button size="small" severity="secondary" class="!h-6.5 !w-6.5 !p-1" rounded
-            v-tooltip="{ value: 'Logout', showDelay: 1000, hideDelay: 300 }">
-            <Icon icon="material-symbols:logout-rounded" />
+          <!-- <Button size="small" severity="secondary" variant="text" class="!h-6.5 !w-6.5 !p-1" rounded
+            v-tooltip="{ value: 'Logout', showDelay: 1000, hideDelay: 300 }" @click="settingsVisible = true">
+            <Icon icon="material-symbols:settings-outline-rounded" />
+          </Button> -->
+
+          <Button size="small" severity="secondary" variant="text" class="!p-0" rounded @click="settingsVisible = true">
+            <template #icon>
+              <Icon icon="material-symbols:settings-outline-rounded" width="18" height="18" />
+            </template>
           </Button>
         </div>
       </div>
@@ -35,6 +42,8 @@ onBeforeMount(async () => {
     <div class="layout-content">
       <RouterView />
     </div>
+
+    <SettingsDialog v-model:visible="settingsVisible" />
 
     <!-- <footer class="py-12 footer-container">
     </footer> -->

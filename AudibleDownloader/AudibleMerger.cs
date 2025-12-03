@@ -36,7 +36,7 @@ internal class AudibleMerger
 
     #region Public Methods
 
-    public async Task<string> AutoMergeAsync(string asin, string directory)
+    public async Task<string> MergeBookAsync(string asin, string directory, bool trimParts, bool deleteParts)
     {
         UpdateProgress(
             asin,
@@ -55,45 +55,61 @@ internal class AudibleMerger
             );
         });
 
-        List<string> parts = GetPartsInOrder(directory);
+        bool success = false;
+
         string bookName = new DirectoryInfo(directory).Name;
         string mergedFilePath = Path.Combine(directory, $"{bookName}.m4a");
+        List<string> parts = GetPartsInOrder(directory);
 
-        string tempDir = Path.Combine(directory, "_temp_merge");
-        Directory.CreateDirectory(tempDir);
-
-        //List<string> trimmedFiles = new List<string>();
-
-        //for (int i = 0; i < parts.Count; i++)
-        //{
-        //    string partPath = parts[i];
-        //    string trimmedPath = Path.Combine(tempDir, $"trimmed_{i}.m4a");
-
-        //    await TrimPartAsync(ffmpegPath, directory, partPath, trimmedPath, i, parts.Count);
-        //    trimmedFiles.Add(trimmedPath);
-        //}
-
-        List<Task<string>> trimTasks = new List<Task<string>>();
-
-        for (int i = 0; i < parts.Count; i++)
+        if (trimParts)
         {
-            string partPath = parts[i];
-            string trimmedPath = Path.Combine(tempDir, $"trimmed_{i}.m4a");
+            string tempDir = Path.Combine(directory, "_temp_merge");
 
-            int capturedIndex = i;
-
-            trimTasks.Add(Task.Run(async () =>
+            if (Directory.Exists(tempDir))
             {
-                await TrimPartAsync(ffmpegPath, asin, partPath, trimmedPath, capturedIndex, parts.Count);
-                return trimmedPath;
-            }));
+                Directory.Delete(tempDir, recursive: true);
+            }
+
+            Directory.CreateDirectory(tempDir);
+
+            List<Task<string>> trimTasks = new List<Task<string>>();
+
+            for (int i = 0; i < parts.Count; i++)
+            {
+                string partPath = parts[i];
+                string trimmedPath = Path.Combine(tempDir, $"trimmed_{i}.m4a");
+
+                int capturedIndex = i;
+
+                trimTasks.Add(Task.Run(async () =>
+                {
+                    await TrimPartAsync(ffmpegPath, asin, partPath, trimmedPath, capturedIndex, parts.Count);
+                    return trimmedPath;
+                }));
+            }
+
+            string[] trimmedFiles = await Task.WhenAll(trimTasks);
+
+            success = await MergePartsAsync(ffmpegPath, asin, trimmedFiles, mergedFilePath, true);
+
+            Directory.Delete(tempDir, recursive: true);
+        }
+        else
+        {
+            success = await MergePartsAsync(ffmpegPath, asin, parts.ToArray(), mergedFilePath, false);
         }
 
-        string[] trimmedFiles = await Task.WhenAll(trimTasks);
-
-        await MergePartsFinalAsync(ffmpegPath, asin, trimmedFiles, mergedFilePath);
-
-        Directory.Delete(tempDir, recursive: true);
+        if (success && deleteParts)
+        {
+            foreach (string part in parts)
+            {
+                try
+                {
+                    File.Delete(part);
+                }
+                catch { }
+            }
+        }
 
         return mergedFilePath;
     }
@@ -222,8 +238,13 @@ internal class AudibleMerger
         UpdatePartProgress(asin, partIndex, totalParts, 1.0);
     }
 
-    private async Task MergePartsFinalAsync(string ffmpegPath, string asin, string[] trimmedFiles, string outputPath)
+    private async Task<bool> MergePartsAsync(string ffmpegPath, string asin, string[] trimmedFiles, string outputPath, bool trimParts)
     {
+        if (File.Exists(outputPath))
+        {
+            File.Delete(outputPath);
+        }
+
         string title = Path.GetFileNameWithoutExtension(outputPath);
 
         // 1. Build concat list
@@ -320,7 +341,7 @@ internal class AudibleMerger
 
                     double mergeProgress = Math.Min(1.0, currentTime.TotalMilliseconds / totalLength.TotalMilliseconds);
 
-                    UpdateMergeProgress(asin, trimmedFiles.Length, mergeProgress);
+                    UpdateMergeProgress(asin, trimmedFiles.Length, mergeProgress, trimParts);
                 }
             }
         };
@@ -328,17 +349,22 @@ internal class AudibleMerger
         process.BeginErrorReadLine();
         await process.WaitForExitAsync();
 
-        if (process.ExitCode != 0)
+        bool success = process.ExitCode == 0;
+
+        if (success)
+        {
+            UpdateMergeProgress(asin, trimmedFiles.Length, 1.0, trimParts, MergeStatus.Completed);
+        }
+        else
         {
             UpdateProgress(asin, null, "Failed to merge", MergeStatus.Failed);
-            throw new Exception($"FFmpeg failed with exit code {process.ExitCode}");
         }
-
-        UpdateMergeProgress(asin, trimmedFiles.Length, 1.0, MergeStatus.Completed);
 
         // Cleanup
         File.Delete(concatFilePath);
         File.Delete(metaPath);
+
+        return success;
     }
 
     private static List<string> GetPartsInOrder(string directory)
@@ -429,11 +455,7 @@ internal class AudibleMerger
         int completedParts = partsDict.Values.Count(p => p >= 1.0);
         double inProgressSum = partsDict.Values.Where(p => p < 1.0).Sum();
 
-        // Total steps = all parts + final merge
-        int totalSteps = totalParts + 1;
-
-        // Overall progress = (completed parts + sum of in-progress parts) / total steps
-        double overallProgress = (completedParts + inProgressSum) / totalSteps;
+        double overallProgress = ((completedParts + inProgressSum) / totalParts) / 2.0;
 
         UpdateProgress(
             directory,
@@ -469,15 +491,14 @@ internal class AudibleMerger
         );
     }
 
-    private void UpdateMergeProgress(string asin, int totalParts, double mergeProgress, MergeStatus status = MergeStatus.Merging)
+    private void UpdateMergeProgress(string asin, int totalParts, double mergeProgress, bool trimParts, MergeStatus status = MergeStatus.Merging)
     {
-        int totalSteps = totalParts + 1;
-        double overallProgress = (totalParts + mergeProgress) / totalSteps;
+        double overallProgress = trimParts ? 0.5 + (mergeProgress * 0.5) : mergeProgress;
 
         UpdateProgress(
             asin,
             overallProgress,
-            "Merging final file...",
+            "Merging parts...",
             status
         );
     }

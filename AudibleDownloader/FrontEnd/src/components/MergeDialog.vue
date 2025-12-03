@@ -27,8 +27,8 @@ function merge() {
 
 <template>
     <Dialog v-model:visible="visible" modal header="Merge Settings" :style="{ width: '40rem' }" :dismissableMask="true"
-        @show="shown">
-        <div class="flex flex-col gap-3">
+        @show="shown" :draggable="false">
+        <div class="flex flex-col gap-5">
             <div class="flex flex-col gap-2">
                 <div class="flex items-center gap-2">
                     <Checkbox v-model="trimParts" inputId="trim" binary />

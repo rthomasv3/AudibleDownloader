@@ -26,7 +26,7 @@
   --toolbar-text-color: rgb(50, 50, 50);
 
   --scrollpanel-bar-color: #959596;
-  --scrollpanel-bar-size: 14px;
+  --scrollpanel-bar-size: 15px;
   --scrollpanel-bar-border-radius: 7px;
 
   --menu-item-color: #334155;
@@ -79,7 +79,7 @@
   --toolbar-text-color: #a1a1aa;
 
   --scrollpanel-bar-color: #27272a;
-  --scrollpanel-bar-size: 14px;
+  --scrollpanel-bar-size: 15px;
   --scrollpanel-bar-border-radius: 7px;
 
   --p-inputtext-background: #18181b;
@@ -123,12 +123,16 @@
 
 html {
   min-width: 0;
+  height: 100%;
+  background-color: var(--body-bg);
 }
 
 body {
   margin: 0px;
   display: flex;
   min-width: 0;
+  height: 100%;
+  background-color: var(--body-bg);
 }
 
 #app {
@@ -230,6 +234,7 @@ body {
 
 ::-webkit-scrollbar-track {
   background: transparent;
+  /* background-color: var(--nav-background); */
 }
 
 ::-webkit-scrollbar-thumb {

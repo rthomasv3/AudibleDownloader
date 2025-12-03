@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch, nextTick } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { Icon } from '@iconify/vue';
 import MergeDialog from './MergeDialog.vue';
 
@@ -46,6 +46,7 @@ onMounted(async () => {
     await getLibrary();
     getSearchOptions();
     searchLibrary();
+    isLoading.value = false;
 });
 
 async function getLibrary() {
@@ -53,7 +54,6 @@ async function getLibrary() {
     const libraryResult = await galdrInvoke("getLibrary");
     if (libraryResult && libraryResult.items) {
         libraryItems.value = libraryResult.items;
-        isLoading.value = false;
     }
 }
 
@@ -277,12 +277,15 @@ function clearSearchText() {
 
 function showMergeDialog(item) {
     selectedLibraryItem.value = item;
-    mergeDialogVisible.value = false;
-    nextTick(() => mergeDialogVisible.value = true);
+    mergeDialogVisible.value = true;
 }
 
 async function startMerge(options) {
-    const promise = galdrInvoke("mergeBook", { libraryEntry: options.libraryItem });
+    const promise = galdrInvoke("mergeBook", {
+        libraryEntry: options.libraryItem,
+        trimParts: options.trimParts,
+        deleteParts: options.deleteParts
+    });
 
     const intervalId = setInterval(async () => {
         try {
@@ -312,6 +315,9 @@ async function startMerge(options) {
         options.libraryItem.mergeProgress = null;
         options.libraryItem.mergeMessage = null;
         options.libraryItem.isMerged = true;
+    } else {
+        options.libraryItem.mergeProgress = null;
+        // show alert or something with mergeMessage
     }
 }
 </script>
@@ -350,7 +356,7 @@ async function startMerge(options) {
                 </div>
                 <Divider layout="vertical" class="h-7" />
                 <div>
-                    <Button label="Sync All" severity="secondary" variant="outlined" size="small" @click="syncAll" />
+                    <Button label="Sync All" size="small" @click="syncAll" />
                 </div>
             </div>
 
@@ -409,14 +415,14 @@ async function startMerge(options) {
                 <Tag v-if="item.isMerged" severity="info" value="Merged" rounded></Tag>
 
                 <div v-if="item.downloadProgress" class="w-full">
-                    <ProgressBar :value="Math.floor(item.downloadProgress * 100)" />
+                    <ProgressBar :value="Math.floor(item.downloadProgress * 100)" class="custom-progress" />
                     <p v-if="item.downloadMessage" class="text-neutral-500">
                         {{ item.downloadMessage }}
                     </p>
                 </div>
 
                 <div v-if="item.mergeProgress" class="w-full">
-                    <ProgressBar :value="Math.floor(item.mergeProgress * 100)" />
+                    <ProgressBar :value="Math.floor(item.mergeProgress * 100)" class="custom-progress" />
                     <p v-if="item.mergeMessage" class="text-neutral-500">
                         {{ item.mergeMessage }}
                     </p>
@@ -424,12 +430,16 @@ async function startMerge(options) {
             </div>
         </div>
 
-        <MergeDialog :visible="mergeDialogVisible" :libraryItem=selectedLibraryItem @committed="startMerge" />
+        <MergeDialog v-model:visible="mergeDialogVisible" :libraryItem=selectedLibraryItem @committed="startMerge" />
     </div>
 </template>
 
 <style scoped>
 .addon-button {
     background: var(--p-inputtext-background);
+}
+
+.custom-progress :deep(.p-progressbar-value) {
+    transition: width 0.1s ease-in-out !important;
 }
 </style>

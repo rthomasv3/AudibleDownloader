@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using AudibleDownloader.Models;
 using AudibleDownloader.Models.Audible;
 using Galdr.Native;
@@ -225,14 +226,14 @@ internal class Program
             };
         });
 
-        builder.AddFunction("mergeBook", async (LibraryResult libraryEntry, AudibleMerger audibleMerger) =>
+        builder.AddFunction("mergeBook", async (LibraryResult libraryEntry, bool trimParts, bool deleteParts, AudibleMerger audibleMerger) =>
         {
             bool success = false;
 
             try
             {
-                string path = await audibleMerger.AutoMergeAsync(libraryEntry.Asin, libraryEntry.Directory);
-                success = !String.IsNullOrEmpty(path);
+                string path = await audibleMerger.MergeBookAsync(libraryEntry.Asin, libraryEntry.Directory, trimParts, deleteParts);
+                success = !String.IsNullOrEmpty(path) && File.Exists(path);
             }
             catch { }
 
@@ -250,6 +251,58 @@ internal class Program
         builder.AddAction("clearMergeProgress", (string asin, AudibleMerger audibleMerger) =>
         {
             audibleMerger.ClearMergeProgress(asin);
+        });
+
+        builder.AddFunction("getSettings", (Config config) =>
+        {
+            return config;
+        });
+
+        builder.AddFunction("updateLibraryPath", (string newPath, Config config) =>
+        {
+            config.LibraryPath = newPath;
+            string json = JsonSerializer.Serialize(config, AudibleJsonContext.Default.Config);
+            File.WriteAllText(config.SettingsPath, json);
+            return config;
+        });
+
+        builder.AddFunction("browseDirectory", async (string defaultPath, Galdr.Native.Galdr galdr, IDialogService dialogService) =>
+        {
+            string directory = "waiting...";
+
+            galdr.Dispatch(() =>
+            {
+                string cleanDirectory = String.IsNullOrEmpty(defaultPath) ? null : Path.GetFullPath(defaultPath);
+                directory = dialogService.OpenDirectoryDialog(cleanDirectory);
+            });
+
+            while (directory == "waiting...")
+            {
+                await Task.Delay(250);
+            }
+
+            return new BrowseDirectoryResult()
+            {
+                SelectedDirectory = directory
+            };
+        });
+
+        builder.AddFunction("logoutAndUnregister", async (Config config, AudibleClient client) =>
+        {
+            bool success = false;
+
+            DeregisterResponse response = await client.DeregisterAsync();
+            success = response?.Response?.Success ?? false;
+
+            if (success && File.Exists(config.AuthFilePath))
+            {
+                File.Delete(config.AuthFilePath);
+            }
+
+            return new LogoutResult()
+            {
+                Success = success
+            };
         });
 
         using Galdr.Native.Galdr galdr = builder
