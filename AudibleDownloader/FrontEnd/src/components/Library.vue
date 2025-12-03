@@ -263,7 +263,7 @@ function openDirectory(item) {
 }
 
 function syncAll() {
-
+    // todo...
 }
 
 function toggleSort() {
@@ -335,7 +335,7 @@ async function startMerge(options) {
 <template>
     <div class="flex flex-col gap-1 p-4">
         <div>
-            <div class="flex justify-between items-center px-1 gap-3">
+            <div class="flex justify-between items-center px-1 gap-2">
                 <div class="flex flex-1 items-center gap-3">
                     <p class="text-4xl mb-1">Library</p>
 
@@ -366,7 +366,7 @@ async function startMerge(options) {
                 </div>
                 <Divider layout="vertical" class="h-7" />
                 <div>
-                    <Button label="Sync All" size="small" @click="syncAll" />
+                    <Button label="Refresh Library" size="small" severity="secondary" @click="refreshLibrary" />
                 </div>
             </div>
 

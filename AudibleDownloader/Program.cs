@@ -23,32 +23,36 @@ internal class Program
         {
             config.IsLoggedIn = true;
         }
+        else
+        {
+            config.IsLoggedIn = false;
+        }
 
 #if !DEBUG
         EmbeddedContent embeddedContent = new(embeddedNamespace: "AudibleDownloader", contentDir: "FrontEnd.dist");
         Uri embeddedUri = new(embeddedContent.ToWebviewUrl());
 #endif
 
-        GaldrBuilder builder = new GaldrBuilder()
-            .SetTitle("Audible Downloader")
-            .SetSize(1024, 768)
-            .SetMinSize(640, 480)
+            GaldrBuilder builder = new GaldrBuilder()
+                .SetTitle("Audible Downloader")
+                .SetSize(1024, 768)
+                .SetMinSize(640, 480)
 #if DEBUG
-            .SetDebug(true)
-            .SetPort(5173)
-            .SetInitScript(GetUrlMonitorScript(5173))
-            .SetContentProvider(new UrlContent("http://localhost:5173/"))
+                .SetDebug(true)
+                .SetPort(5173)
+                .SetInitScript(GetUrlMonitorScript(5173))
+                .SetContentProvider(new UrlContent("http://localhost:5173/"))
 #else
             .SetPort(embeddedUri.Port)
             .SetInitScript(GetUrlMonitorScript(embeddedUri.Port))
             .SetContentProvider(embeddedContent)
 #endif
-            .AddSingleton(config)
-            .AddSingleton<AudibleClient>()
-            .AddSingleton<AudibleRegister>()
-            .AddSingleton<FFmpegManager>()
-            .AddSingleton<AudibleMerger>()
-            .AddSingleton<AuthManager>();
+                .AddSingleton(config)
+                .AddSingleton<AudibleClient>()
+                .AddSingleton<AudibleRegister>()
+                .AddSingleton<FFmpegManager>()
+                .AddSingleton<AudibleMerger>()
+                .AddSingleton<AuthManager>();
 
         builder.AddFunction("getLoginStatus", (Config Config) =>
         {
@@ -73,6 +77,7 @@ internal class Program
                 register.ExtractAuthorizationCode(url);
                 await register.CreateAuthFileAsync();
                 config.IsLoggedIn = File.Exists(config.AuthFilePath);
+                SaveConfig(config);
             }
         });
 
@@ -268,8 +273,7 @@ internal class Program
         builder.AddFunction("updateLibraryPath", (string newPath, Config config) =>
         {
             config.LibraryPath = newPath;
-            string json = JsonSerializer.Serialize(config, AudibleJsonContext.Default.Config);
-            File.WriteAllText(config.SettingsPath, json);
+            SaveConfig(config);
             return config;
         });
 
@@ -307,12 +311,11 @@ internal class Program
                 {
                     File.Delete(config.AuthFilePath);
                     config.IsLoggedIn = false;
+
+                    SaveConfig(config);
                 }
             }
-            catch (Exception ex)
-            {
-
-            }
+            catch { }
 
             return new LogoutResult()
             {
@@ -387,6 +390,12 @@ internal class Program
         }
 
         return config;
+    }
+
+    static void SaveConfig(Config config)
+    {
+        string json = JsonSerializer.Serialize(config, AudibleJsonContext.Default.Config);
+        File.WriteAllText(config.SettingsPath, json);
     }
 }
 
