@@ -1,9 +1,10 @@
 <script setup>
-import { ref, onMounted, watch, inject } from 'vue'
+import { ref, onMounted, onUnmounted, watch, inject } from 'vue'
 import { Icon } from '@iconify/vue';
 import MergeDialog from './MergeDialog.vue';
 
-var searchTimeout = null;
+let searchTimeout = null;
+let monitoringInterval = null;
 
 const settings = inject("settings");
 
@@ -29,6 +30,9 @@ const onlyCanDownload = ref(true);
 const mergeDialogVisible = ref(false);
 const selectedLibraryItem = ref();
 
+const activeDownloads = ref(new Set());
+const activeMerges = ref(new Set());
+
 watch(
     [searchText, selectedSort, sortDescending, onlyDownloaded, onlyCanDownload],
     () => {
@@ -49,7 +53,14 @@ watch(settings, async (newSettings) => {
 })
 
 onMounted(async () => {
+    startOperationMonitoring();
     await refreshLibrary();
+});
+
+onUnmounted(() => {
+    if (monitoringInterval) {
+        clearInterval(monitoringInterval);
+    }
 });
 
 async function refreshLibrary() {
@@ -190,7 +201,12 @@ function searchLibrary() {
 }
 
 async function startBookDownload(item) {
-    item.downloadProgress = 0.001;
+    if (activeDownloads.value.has(item.asin)) {
+        return;
+    }
+
+    item.downloadProgress = 0.0001;
+    activeDownloads.value.add(item.asin);
 
     const preferredCodecs = [
         'LC_128_44100_stereo',
@@ -216,37 +232,7 @@ async function startBookDownload(item) {
         codec = item.availableCodecs[0];
     }
 
-    const promise = galdrInvoke("downloadBook", { libraryEntry: item, codec: codec });
-
-    const intervalId = setInterval(async () => {
-        try {
-            const result = await galdrInvoke("getDownloadProgress", { asin: item.asin });
-            item.downloadProgress = result.progress || 0.001;
-            item.downloadMessage = result?.message;
-
-            if (result.progress >= 1.0 || result.progress === undefined) {
-                clearInterval(intervalId);
-
-                if (result.progress >= 1.0) {
-                    galdrInvoke("clearDownloadProgress", { asin: item.asin });
-                    item.downloadProgress = null;
-                    item.downloadMessage = null;
-                }
-            }
-        } catch (error) {
-            console.error("Failed to get progress:", error);
-            clearInterval(intervalId);
-        }
-    }, 500);
-
-    const downloadResult = await promise;
-    if (downloadResult.success) {
-        item.downloadProgress = null;
-        item.downloadMessage = null;
-        item.isDownloaded = true;
-        item.directory = downloadResult.directory;
-        item.isMerged = downloadResult.isMerged;
-    }
+    galdrInvoke("downloadBook", { libraryEntry: item, codec: codec });
 }
 
 function minutesToDisplay(minutes) {
@@ -291,44 +277,92 @@ function showMergeDialog(item) {
 }
 
 async function startMerge(options) {
-    const promise = galdrInvoke("mergeBook", {
+    if (activeMerges.value.has(options.libraryItem.asin)) {
+        return;
+    }
+
+    options.libraryItem.mergeProgress = 0.0001;
+    activeMerges.value.add(options.libraryItem.asin);
+
+    galdrInvoke("mergeBook", {
         libraryEntry: options.libraryItem,
         trimParts: options.trimParts,
         deleteParts: options.deleteParts
     });
+}
 
-    const intervalId = setInterval(async () => {
-        try {
-            const result = await galdrInvoke("getMergeProgress", { asin: options.libraryItem.asin });
-            options.libraryItem.mergeProgress = result?.progress || 0.001;
-            options.libraryItem.mergeMessage = result?.message;
+function startOperationMonitoring() {
+    if (monitoringInterval) return;
 
-            if (result != null && result != undefined) {
-                if ((result.progress >= 1.0 && result.status > 1) || result.progress === undefined) {
-                    clearInterval(intervalId);
+    monitoringInterval = setInterval(async () => {
+        // Monitor downloads
+        for (const asin of activeDownloads.value) {
+            const item = libraryItems.value.find(i => i.asin === asin);
+            if (!item) continue;
 
-                    if (result.progress >= 1.0) {
-                        galdrInvoke("clearMergeProgress", { asin: options.libraryItem.asin });
-                        options.libraryItem.mergeProgress = null;
-                        options.libraryItem.mergeMessage = null;
+            const progress = await galdrInvoke("getDownloadProgress", { asin });
+
+            if (progress) {
+                item.downloadProgress = progress.progress || 0.001;
+                item.downloadMessage = progress.message;
+
+                // Check for completion
+                if (progress.status > 2) {
+                    activeDownloads.value.delete(asin);
+
+                    if (progress.status === 3) {
+                        const state = await galdrInvoke("getLibraryItemState", { libraryEntry: item });
+                        if (state) {
+                            item.isDownloaded = state.isDownloaded;
+                            item.directory = state.directory;
+                            item.isMerged = state.isMerged;
+                        }
+                    } else {
+                        // TODO: show toast error message
                     }
+
+                    item.downloadProgress = null;
+                    item.downloadMessage = null;
+
+                    galdrInvoke("clearDownloadProgress", { asin });
                 }
             }
-        } catch (error) {
-            console.error("Failed to get progress:", error);
-            clearInterval(intervalId);
+        }
+
+        // Monitor merges
+        for (const asin of activeMerges.value) {
+            const item = libraryItems.value.find(i => i.asin === asin);
+            if (!item) continue;
+
+            const progress = await galdrInvoke("getMergeProgress", { asin });
+
+            if (progress) {
+                item.mergeProgress = progress.progress || 0.001;
+                item.mergeMessage = progress.message;
+
+                // Check for completion
+                if (progress.status > 3) {
+                    activeMerges.value.delete(asin);
+
+                    if (progress.status === 4) {
+                        const state = await galdrInvoke("getLibraryItemState", { libraryEntry: item });
+                        if (state) {
+                            item.isDownloaded = state.isDownloaded;
+                            item.directory = state.directory;
+                            item.isMerged = state.isMerged;
+                        }
+                    } else {
+                        // TODO: show toast error message
+                    }
+
+                    item.mergeProgress = null;
+                    item.mergeMessage = null;
+
+                    galdrInvoke("clearMergeProgress", { asin });
+                }
+            }
         }
     }, 500);
-
-    const mergeResult = await promise;
-    if (mergeResult.success) {
-        options.libraryItem.mergeProgress = null;
-        options.libraryItem.mergeMessage = null;
-        options.libraryItem.isMerged = true;
-    } else {
-        options.libraryItem.mergeProgress = null;
-        // show alert or something with mergeMessage
-    }
 }
 </script>
 

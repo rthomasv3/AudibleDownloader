@@ -168,8 +168,6 @@ internal class Program
 
         builder.AddFunction("downloadBook", async (LibraryResult libraryEntry, string codec, Config config, AudibleClient client) =>
         {
-            List<byte[]> encryptedBookDataParts = await client.DownloadBookAsync(libraryEntry, codec);
-
             string safeAuthorName = client.RemoveInvalidNameChars(libraryEntry.Authors.FirstOrDefault() ?? "Unknown Author");
 
             string bookTitle = String.IsNullOrWhiteSpace(libraryEntry.Subtitle) ?
@@ -177,31 +175,19 @@ internal class Program
                 $"{libraryEntry.Title} {libraryEntry.Subtitle}";
             string safeBookTitle = client.RemoveInvalidNameChars(bookTitle);
 
-            string saveFileFolder = Path.Combine(
+            string saveFileDirectory = Path.Combine(
                 config.LibraryPath,
                 safeAuthorName,
                 safeBookTitle
             );
 
-            if (!Directory.Exists(saveFileFolder))
-            {
-                Directory.CreateDirectory(saveFileFolder);
-            }
-
-            await client.GetActivationBytesAsync();
-
-            for (int i = 0; i < encryptedBookDataParts.Count; i++)
-            {
-                DecryptedBookResult decryptedBook = await client.DecryptBook(encryptedBookDataParts[i]);
-
-                File.WriteAllBytes(Path.Combine(saveFileFolder, decryptedBook.SafeFileName), decryptedBook.FileData);
-            }
+            int partsCount = await client.DownloadBookAsync(libraryEntry, saveFileDirectory, codec);
 
             return new DownloadBookResult()
             {
                 Success = true,
-                Directory = saveFileFolder,
-                IsMerged = encryptedBookDataParts.Count == 1,
+                Directory = saveFileDirectory,
+                IsMerged = partsCount == 1,
             };
         });
 
@@ -213,6 +199,41 @@ internal class Program
         builder.AddAction("clearDownloadProgress", (string asin, AudibleClient client) =>
         {
             client.ClearDownloadProgress(asin);
+        });
+
+        builder.AddFunction("getLibraryItemState", (LibraryResult libraryEntry, AudibleClient client) =>
+        {
+            string author = libraryEntry.Authors.FirstOrDefault();
+            string safeAuthor = client.RemoveInvalidNameChars(author);
+
+            string bookTitle = String.IsNullOrWhiteSpace(libraryEntry.Subtitle) ? 
+                libraryEntry.Title : 
+                $"{libraryEntry.Title} {libraryEntry.Subtitle}";
+            string safeBookTitle = client.RemoveInvalidNameChars(bookTitle);
+
+            string bookDirectory = Path.Combine(
+                config.LibraryPath,
+                safeAuthor,
+                safeBookTitle
+            );
+
+            bool isDownloaded = false;
+            bool isMerged = false;
+
+            if (Directory.Exists(bookDirectory))
+            {
+                string mergedTitle = new DirectoryInfo(bookDirectory).Name;
+                string[] m4aFiles = Directory.GetFiles(bookDirectory, "*.m4a");
+                isDownloaded = m4aFiles.Length > 0;
+                isMerged = m4aFiles.Any(x => Path.GetFileNameWithoutExtension(x) == mergedTitle);
+            }
+
+            return new LibraryResultState()
+            {
+                IsDownloaded = isDownloaded,
+                IsMerged = isMerged,
+                Directory = isDownloaded ? bookDirectory : null,
+            };
         });
 
         builder.AddAction("openDirectory", (string directory) =>

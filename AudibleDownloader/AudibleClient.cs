@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using AAXClean;
+using AudibleDownloader.Enums;
 using AudibleDownloader.Models;
 using AudibleDownloader.Models.Audible;
 
@@ -158,8 +159,10 @@ internal class AudibleClient : IDisposable
         return activationBytes;
     }
 
-    public async Task<List<byte[]>> DownloadBookAsync(LibraryResult libraryEntry, string codec = "LC_128_44100_stereo")
+    public async Task<int> DownloadBookAsync(LibraryResult libraryEntry, string saveFileDirectory, string codec = "LC_128_44100_stereo")
     {
+        UpdateProgress(libraryEntry.Asin, null, "Starting download...", DownloadStatus.NotStarted);
+
         await EnsureValidAccessTokenAsync();
 
         if (string.IsNullOrEmpty(_auth.AdpToken))
@@ -168,8 +171,6 @@ internal class AudibleClient : IDisposable
         }
 
         List<byte[]> parts = new();
-
-        UpdateProgress(libraryEntry.Asin, null, "Starting download...");
 
         if (libraryEntry.Relationships != null && libraryEntry.Relationships.Count > 0)
         {
@@ -180,7 +181,7 @@ internal class AudibleClient : IDisposable
                 LibraryRelationship relationship = libraryEntry.Relationships[i];
                 string downloadUrl = await GetDownloadLinkAsync(relationship.Asin, codec);
 
-                UpdateProgress(libraryEntry.Asin, null, $"Downloading part {i + 1} of {libraryEntry.Relationships.Count}");
+                UpdateProgress(libraryEntry.Asin, null, $"Downloading part {i + 1} of {libraryEntry.Relationships.Count}", DownloadStatus.Downloading);
 
                 byte[] fileBytes = await DownloadFileFromUrlAsync(libraryEntry.Asin, downloadUrl, i, libraryEntry.Relationships.Count);
                 parts.Add(fileBytes);
@@ -189,14 +190,30 @@ internal class AudibleClient : IDisposable
         else
         {
             string downloadUrl = await GetDownloadLinkAsync(libraryEntry.Asin, codec);
-            UpdateProgress(libraryEntry.Asin, null, $"Downloading...");
+            UpdateProgress(libraryEntry.Asin, null, $"Downloading...", DownloadStatus.Downloading);
             byte[] fileBytes = await DownloadFileFromUrlAsync(libraryEntry.Asin, downloadUrl);
             parts.Add(fileBytes);
         }
 
-        UpdateProgress(libraryEntry.Asin, 1.0, "Decrypting...");
+        UpdateProgress(libraryEntry.Asin, 1.0, "Decrypting...", DownloadStatus.Decrypting);
 
-        return parts;
+        if (!Directory.Exists(saveFileDirectory))
+        {
+            Directory.CreateDirectory(saveFileDirectory);
+        }
+
+        await GetActivationBytesAsync();
+
+        for (int i = 0; i < parts.Count; i++)
+        {
+            DecryptedBookResult decryptedBook = await DecryptBook(parts[i]);
+
+            File.WriteAllBytes(Path.Combine(saveFileDirectory, decryptedBook.SafeFileName), decryptedBook.FileData);
+        }
+
+        UpdateProgress(libraryEntry.Asin, 1.0, "Done", DownloadStatus.Completed);
+
+        return parts.Count;
     }
 
     public DownloadBookProgressResult GetDownloadProgress(string asin)
@@ -363,12 +380,12 @@ internal class AudibleClient : IDisposable
                     {
                         double currentPartProgress = (double)totalBytesRead / contentLength.Value;
                         //_downloadProgress[asin] = ((double)partNumber + currentPartProgress) / (double)totalParts;
-                        UpdateProgress(asin, ((double)partNumber + currentPartProgress) / (double)totalParts);
+                        UpdateProgress(asin, ((double)partNumber + currentPartProgress) / (double)totalParts, downloadStatus: DownloadStatus.Downloading);
                     }
                 }
 
                 //_downloadProgress[asin] = (partNumber + 1.0) / (double)totalParts;
-                UpdateProgress(asin, (partNumber + 1.0) / (double)totalParts);
+                UpdateProgress(asin, (partNumber + 1.0) / (double)totalParts, downloadStatus: DownloadStatus.Downloading);
 
                 return ms.ToArray();
             }
@@ -620,14 +637,15 @@ internal class AudibleClient : IDisposable
         return author;
     }
 
-    private void UpdateProgress(string asin, double? progress = null, string message = null)
+    private void UpdateProgress(string asin, double? progress = null, string message = null, DownloadStatus downloadStatus = DownloadStatus.NotStarted)
     {
         _downloadProgress.AddOrUpdate(
             asin,
             new DownloadBookProgressResult
             {
                 Progress = progress ?? 0.0001,
-                Message = message ?? string.Empty
+                Message = message ?? string.Empty,
+                Status = (int)downloadStatus
             },
             (key, existing) =>
             {
@@ -636,6 +654,8 @@ internal class AudibleClient : IDisposable
 
                 if (message != null)
                     existing.Message = message;
+
+                existing.Status = (int)downloadStatus;
 
                 return existing;
             }

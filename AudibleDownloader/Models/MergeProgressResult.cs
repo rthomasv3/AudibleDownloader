@@ -1,6 +1,4 @@
-﻿using AudibleDownloader.Enums;
-
-namespace AudibleDownloader.Models;
+﻿namespace AudibleDownloader.Models;
 
 internal class MergeProgressResult
 {
