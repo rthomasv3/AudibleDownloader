@@ -66,9 +66,9 @@ jobs:
       if: matrix.platform == 'windows-latest'
       run: |
         mkdir artifact
-        copy ".\bin\Release\net10.0\win-x64\publish\AudibleDownloader.exe" artifact\
-        copy ".\bin\Release\net10.0\win-x64\publish\webview.dll" artifact\
-        copy ".\bin\Release\net10.0\win-x64\publish\nfd.dll" artifact\
+        copy ".\AudibleDownloader\bin\Release\net10.0\win-x64\publish\AudibleDownloader.exe" artifact\
+        copy ".\AudibleDownloader\bin\Release\net10.0\win-x64\publish\webview.dll" artifact\
+        copy ".\AudibleDownloader\bin\Release\net10.0\win-x64\publish\nfd.dll" artifact\
       shell: cmd
 
     - name: Archive Windows Artifacts
@@ -83,9 +83,9 @@ jobs:
       if: matrix.platform == 'ubuntu-latest'
       run: |
         mkdir artifact
-        cp "./bin/Release/net10.0/linux-x64/publish/AudibleDownloader" artifact/
-        cp ./bin/Release/net10.0/linux-x64/publish/libwebview.so artifact/ || cp ./bin/Release/net10.0/linux-x64/publish/webview.so artifact/ || true
-        cp ./bin/Release/net10.0/linux-x64/publish/libnfd.so artifact/ || cp ./bin/Release/net10.0/linux-x64/publish/nfd.so artifact/ || true
+        cp "./AudibleDownloader/bin/Release/net10.0/linux-x64/publish/AudibleDownloader" artifact/
+        cp ./AudibleDownloader/bin/Release/net10.0/linux-x64/publish/libwebview.so artifact/ || cp ./AudibleDownloader/bin/Release/net10.0/linux-x64/publish/webview.so artifact/ || true
+        cp ./AudibleDownloader/bin/Release/net10.0/linux-x64/publish/libnfd.so artifact/ || cp ./AudibleDownloader/bin/Release/net10.0/linux-x64/publish/nfd.so artifact/ || true
 
     - name: Archive Linux Artifacts
       if: matrix.platform == 'ubuntu-latest'
@@ -99,9 +99,9 @@ jobs:
       if: matrix.platform == 'macos-latest'
       run: |
         mkdir artifact
-        cp "./bin/Release/net10.0/osx-x64/publish/AudibleDownloader" artifact/
-        cp ./bin/Release/net10.0/osx-x64/publish/libwebview.dylib artifact/ || cp ./bin/Release/net10.0/osx-x64/publish/webview.dylib artifact/ || true
-        cp ./bin/Release/net10.0/osx-x64/publish/libnfd.dylib artifact/ || cp ./bin/Release/net10.0/osx-x64/publish/nfd.dylib artifact/ || true
+        cp "./AudibleDownloader/bin/Release/net10.0/osx-x64/publish/AudibleDownloader" artifact/
+        cp ./AudibleDownloader/bin/Release/net10.0/osx-x64/publish/libwebview.dylib artifact/ || cp ./AudibleDownloader/bin/Release/net10.0/osx-x64/publish/webview.dylib artifact/ || true
+        cp ./AudibleDownloader/bin/Release/net10.0/osx-x64/publish/libnfd.dylib artifact/ || cp ./AudibleDownloader/bin/Release/net10.0/osx-x64/publish/nfd.dylib artifact/ || true
 
     - name: Archive macOS Artifacts
       if: matrix.platform == 'macos-latest'
@@ -115,9 +115,9 @@ jobs:
       if: matrix.platform == 'macos-latest'
       run: |
         mkdir artifactArm
-        cp "./bin/Release/net10.0/osx-arm64/publish/AudibleDownloader" artifactArm/
-        cp ./bin/Release/net10.0/osx-arm64/publish/libwebview.dylib artifactArm/ || cp ./bin/Release/net10.0/osx-arm64/publish/webview.dylib artifactArm/ || true
-        cp ./bin/Release/net10.0/osx-arm64/publish/libnfd.dylib artifactArm/ || cp ./bin/Release/net10.0/osx-arm64/publish/nfd.dylib artifactArm/ || true
+        cp "./AudibleDownloader/bin/Release/net10.0/osx-arm64/publish/AudibleDownloader" artifactArm/
+        cp ./AudibleDownloader/bin/Release/net10.0/osx-arm64/publish/libwebview.dylib artifactArm/ || cp ./AudibleDownloader/bin/Release/net10.0/osx-arm64/publish/webview.dylib artifactArm/ || true
+        cp ./AudibleDownloader/bin/Release/net10.0/osx-arm64/publish/libnfd.dylib artifactArm/ || cp ./AudibleDownloader/bin/Release/net10.0/osx-arm64/publish/nfd.dylib artifactArm/ || true
 
     - name: Archive macOS Artifacts
       if: matrix.platform == 'macos-latest'
