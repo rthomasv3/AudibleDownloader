@@ -27,9 +27,13 @@ jobs:
         node-version: 20.x
         cache: 'npm'
 
-    - run: npm install
+    - name: Install npm dependencies
+      working-directory: ./AudibleDownloader/FrontEnd
+      run: npm install
 
-    - run: npm run build
+    - name: Build frontend
+      working-directory: ./AudibleDownloader/FrontEnd
+      run: npm run build
 
     - name: Restore dependencies
       run: dotnet restore
