@@ -87,7 +87,7 @@ function getSearchOptions() {
             selectedSort.value = options.selectedSort || 1;
             sortDescending.value = options.sortDescending || false;
             onlyDownloaded.value = options.onlyDownloaded || false;
-            onlyCanDownload.value = options.onlyCanDownload ?? true; // Use ?? to preserve true as default
+            onlyCanDownload.value = options.onlyCanDownload ?? true;
         } catch (error) {
             console.error('Failed to parse search options:', error);
         }
