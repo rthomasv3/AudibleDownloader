@@ -9,7 +9,7 @@
   <ItemGroup>
     <PackageReference Include="AAXClean" Version="2.1.0.1" />
     <PackageReference Include="Devlooped.CredentialManager" Version="2.6.1.1" />
-    <PackageReference Include="Galdr.Native" Version="1.0.8" />
+    <PackageReference Include="Galdr.Native" Version="1.1.0" />
   </ItemGroup>
 
   <ItemGroup>
