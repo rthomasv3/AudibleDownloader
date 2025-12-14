@@ -399,6 +399,11 @@ internal class Program
                 "config.json"),
         };
 
+        if (!Directory.Exists(config.LibraryPath))
+        {
+            Directory.CreateDirectory(config.LibraryPath);
+        }
+
         if (File.Exists(config.SettingsPath))
         {
             string json = File.ReadAllText(config.SettingsPath);
