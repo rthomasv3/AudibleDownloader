@@ -18,15 +18,7 @@ internal class Program
     static void Main(string[] args)
     {
         Config config = LoadConfig();
-
-        if (File.Exists(config.AuthFilePath))
-        {
-            config.IsLoggedIn = true;
-        }
-        else
-        {
-            config.IsLoggedIn = false;
-        }
+        config.IsLoggedIn = File.Exists(config.AuthFilePath);
 
 #if !DEBUG
         EmbeddedContent embeddedContent = new(embeddedNamespace: "AudibleDownloader", contentDir: "FrontEnd.dist");
@@ -54,7 +46,7 @@ internal class Program
                 .AddSingleton<AudibleMerger>()
                 .AddSingleton<AuthManager>();
 
-        builder.AddFunction("getLoginStatus", (Config Config) =>
+        builder.AddFunction("getLoginStatus", () =>
         {
             return new LoginStatusResult()
             {
@@ -62,7 +54,7 @@ internal class Program
             };
         });
 
-        builder.AddFunction("getOAuthUrl", async (AudibleRegister register) =>
+        builder.AddFunction("getOAuthUrl", (AudibleRegister register) =>
         {
             return new GetOAuthUrlResult()
             {
@@ -70,7 +62,7 @@ internal class Program
             };
         });
 
-        builder.AddAction("onAuthorizationCodeFound", async (string url, AudibleRegister register, Config config) =>
+        builder.AddAction("onAuthorizationCodeFound", async (string url, AudibleRegister register) =>
         {
             if (url.Contains("openid.oa2.authorization_code="))
             {
@@ -81,7 +73,7 @@ internal class Program
             }
         });
 
-        builder.AddFunction("getLibrary", async (Config config, AudibleClient client) =>
+        builder.AddFunction("getLibrary", async (AudibleClient client) =>
         {
             List <LibraryItem> libraryItems = await client.GetAllLibraryItemsAsync();
 
@@ -109,7 +101,7 @@ internal class Program
                         string mergedTitle = new DirectoryInfo(bookDirectory).Name;
                         string[] m4aFiles = Directory.GetFiles(bookDirectory, "*.m4a");
                         isDownloaded = m4aFiles.Length > 0;
-                        isMerged = m4aFiles.Any(x => Path.GetFileNameWithoutExtension(x) == mergedTitle);
+                        isMerged = m4aFiles.Any(y => Path.GetFileNameWithoutExtension(y) == mergedTitle);
                     }
 
                     return new LibraryResult()
@@ -166,7 +158,7 @@ internal class Program
             };
         });
 
-        builder.AddFunction("downloadBook", async (LibraryResult libraryEntry, string codec, Config config, AudibleClient client) =>
+        builder.AddFunction("downloadBook", async (LibraryResult libraryEntry, string codec, AudibleClient client) =>
         {
             string safeAuthorName = client.RemoveInvalidNameChars(libraryEntry.Authors.FirstOrDefault() ?? "Unknown Author");
 
@@ -286,12 +278,12 @@ internal class Program
             audibleMerger.ClearMergeProgress(asin);
         });
 
-        builder.AddFunction("getSettings", (Config config) =>
+        builder.AddFunction("getSettings", () =>
         {
             return config;
         });
 
-        builder.AddFunction("updateLibraryPath", (string newPath, Config config) =>
+        builder.AddFunction("updateLibraryPath", (string newPath) =>
         {
             config.LibraryPath = newPath;
             SaveConfig(config);
@@ -319,7 +311,7 @@ internal class Program
             };
         });
 
-        builder.AddFunction("logoutAndUnregister", async (Config config, AudibleClient client) =>
+        builder.AddFunction("logoutAndUnregister", async (AudibleClient client) =>
         {
             bool success = false;
 
