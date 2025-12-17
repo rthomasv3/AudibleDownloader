@@ -1,21 +1,21 @@
-﻿using System.Text.Json.Serialization;
+﻿using GaldrJson;
 
 namespace AudibleDownloader.Models.Audible;
 
 internal class CustomerInfo
 {
-    [JsonPropertyName("account_pool")]
+    [GaldrJsonPropertyName("account_pool")]
     public string AccountPool { get; set; }
 
-    [JsonPropertyName("user_id")]
+    [GaldrJsonPropertyName("user_id")]
     public string UserId { get; set; }
 
-    [JsonPropertyName("home_region")]
+    [GaldrJsonPropertyName("home_region")]
     public string HomeRegion { get; set; }
 
-    [JsonPropertyName("name")]
+    [GaldrJsonPropertyName("name")]
     public string Name { get; set; }
 
-    [JsonPropertyName("given_name")]
+    [GaldrJsonPropertyName("given_name")]
     public string GivenName { get; set; }
 }

@@ -1,33 +1,33 @@
-﻿using System.Text.Json.Serialization;
+﻿using GaldrJson;
 
 namespace AudibleDownloader.Models.Audible;
 
 internal class RegistrationData
 {
-    [JsonPropertyName("domain")]
+    [GaldrJsonPropertyName("domain")]
     public string Domain { get; set; }
 
-    [JsonPropertyName("app_version")]
+    [GaldrJsonPropertyName("app_version")]
     public string AppVersion { get; set; }
 
-    [JsonPropertyName("device_serial")]
+    [GaldrJsonPropertyName("device_serial")]
     public string DeviceSerial { get; set; }
 
-    [JsonPropertyName("device_type")]
+    [GaldrJsonPropertyName("device_type")]
     public string DeviceType { get; set; }
 
-    [JsonPropertyName("device_name")]
+    [GaldrJsonPropertyName("device_name")]
     public string DeviceName { get; set; }
 
-    [JsonPropertyName("os_version")]
+    [GaldrJsonPropertyName("os_version")]
     public string OsVersion { get; set; }
 
-    [JsonPropertyName("software_version")]
+    [GaldrJsonPropertyName("software_version")]
     public string SoftwareVersion { get; set; }
 
-    [JsonPropertyName("device_model")]
+    [GaldrJsonPropertyName("device_model")]
     public string DeviceModel { get; set; }
 
-    [JsonPropertyName("app_name")]
+    [GaldrJsonPropertyName("app_name")]
     public string AppName { get; set; }
 }

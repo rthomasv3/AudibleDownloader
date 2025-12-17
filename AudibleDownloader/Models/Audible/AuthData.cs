@@ -1,21 +1,21 @@
-﻿using System.Text.Json.Serialization;
+﻿using GaldrJson;
 
 namespace AudibleDownloader.Models.Audible;
 
 internal class AuthData
 {
-    [JsonPropertyName("client_id")]
+    [GaldrJsonPropertyName("client_id")]
     public string ClientId { get; set; }
 
-    [JsonPropertyName("authorization_code")]
+    [GaldrJsonPropertyName("authorization_code")]
     public string AuthorizationCode { get; set; }
 
-    [JsonPropertyName("code_verifier")]
+    [GaldrJsonPropertyName("code_verifier")]
     public string CodeVerifier { get; set; }
 
-    [JsonPropertyName("code_algorithm")]
+    [GaldrJsonPropertyName("code_algorithm")]
     public string CodeAlgorithm { get; set; }
 
-    [JsonPropertyName("client_domain")]
+    [GaldrJsonPropertyName("client_domain")]
     public string ClientDomain { get; set; }
 }

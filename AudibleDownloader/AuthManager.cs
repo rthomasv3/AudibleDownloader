@@ -2,8 +2,8 @@
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json;
 using AudibleDownloader.Models;
+using GaldrJson;
 using GitCredentialManager;
 
 namespace AudibleDownloader;
@@ -17,6 +17,7 @@ internal class AuthManager
     private static readonly string _userName = "AudibleUser";
 
     private readonly Config _config;
+    private readonly IGaldrJsonSerializer _galdrJson;
     private readonly ICredentialStore _credentialStore;
 
     private byte[] _encryptionKey;
@@ -25,9 +26,10 @@ internal class AuthManager
 
     #region Constructor
 
-    public AuthManager(Config config)
+    public AuthManager(Config config, IGaldrJsonSerializer galdrJson)
     {
         _config = config;
+        _galdrJson = galdrJson;
 
         _credentialStore = CredentialManager.Create(_storeName);
         ICredential credential = _credentialStore.Get(_serviceName, _userName);
@@ -50,7 +52,7 @@ internal class AuthManager
 
     public void SaveAuthFile(AuthFile auth)
     {
-        string authJson = JsonSerializer.Serialize(auth, AudibleJsonContext.Default.AuthFile);
+        string authJson = _galdrJson.Serialize<AuthFile>(auth);
         byte[] plaintext = Encoding.UTF8.GetBytes(authJson);
         byte[] encrypted = Encrypt(plaintext, _encryptionKey);
         File.WriteAllBytes(_config.AuthFilePath, encrypted);
@@ -64,7 +66,7 @@ internal class AuthManager
         byte[] encryptedData = File.ReadAllBytes(_config.AuthFilePath);
         byte[] plaintext = Decrypt(encryptedData, _encryptionKey);
         string authJson = Encoding.UTF8.GetString(plaintext);
-        return JsonSerializer.Deserialize(authJson, AudibleJsonContext.Default.AuthFile);
+        return _galdrJson.Deserialize<AuthFile>(authJson);
     }
 
     #endregion

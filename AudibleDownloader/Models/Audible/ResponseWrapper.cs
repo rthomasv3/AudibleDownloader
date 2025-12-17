@@ -1,9 +1,9 @@
-﻿using System.Text.Json.Serialization;
+﻿using GaldrJson;
 
 namespace AudibleDownloader.Models.Audible;
 
 internal class ResponseWrapper
 {
-    [JsonPropertyName("success")]
+    [GaldrJsonPropertyName("success")]
     public SuccessResponse Success { get; set; }
 }

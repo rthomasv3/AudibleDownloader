@@ -5,11 +5,11 @@ using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web;
 using AudibleDownloader.Models;
 using AudibleDownloader.Models.Audible;
+using GaldrJson;
 
 namespace AudibleDownloader;
 
@@ -18,6 +18,7 @@ internal class AudibleRegister
     #region Fields
 
     private readonly AuthManager _authManager;
+    private readonly IGaldrJsonSerializer _galdrJson;
 
     private string _authCode;
     private string _codeVerifier;
@@ -29,9 +30,10 @@ internal class AudibleRegister
 
     #region Constructor
 
-    public AudibleRegister(AuthManager authManager)
+    public AudibleRegister(AuthManager authManager, IGaldrJsonSerializer galdrJson)
     {
         _authManager = authManager;
+        _galdrJson = galdrJson;
     }
 
     #endregion
@@ -43,7 +45,7 @@ internal class AudibleRegister
         string clientId = BuildClientId(_serial);
         RegistrationRequest request = BuildRegistrationRequest(clientId);
 
-        string requestBody = JsonSerializer.Serialize(request, AudibleJsonContext.Default.RegistrationRequest);
+        string requestBody = _galdrJson.Serialize<RegistrationRequest>(request);
 
         HttpClient httpClient = new HttpClient();
         string registrationUrl = $"https://api.amazon.{_domain}/auth/register";
@@ -54,7 +56,7 @@ internal class AudibleRegister
 
         response.EnsureSuccessStatusCode();
 
-        RegistrationResponse registrationResponse = JsonSerializer.Deserialize(responseBody, AudibleJsonContext.Default.RegistrationResponse);
+        RegistrationResponse registrationResponse = _galdrJson.Deserialize<RegistrationResponse>(responseBody);
         AuthFile authFile = CreateAuthFile(registrationResponse, _domain);
 
         _authManager.SaveAuthFile(authFile);
@@ -65,7 +67,7 @@ internal class AudibleRegister
         string clientId = BuildClientId(authResult.Serial);
         RegistrationRequest request = BuildRegistrationRequest(authResult, clientId);
 
-        string requestBody = JsonSerializer.Serialize(request, AudibleJsonContext.Default.RegistrationRequest);
+        string requestBody = _galdrJson.Serialize<RegistrationRequest>(request);
 
         HttpClient httpClient = new HttpClient();
         string registrationUrl = $"https://api.amazon.{authResult.Domain}/auth/register";
@@ -76,7 +78,7 @@ internal class AudibleRegister
 
         response.EnsureSuccessStatusCode();
 
-        RegistrationResponse registrationResponse = JsonSerializer.Deserialize(responseBody, AudibleJsonContext.Default.RegistrationResponse);
+        RegistrationResponse registrationResponse = _galdrJson.Deserialize<RegistrationResponse>(responseBody);
         AuthFile authFile = CreateAuthFile(registrationResponse, authResult.Domain);
 
         _authManager.SaveAuthFile(authFile);
@@ -193,7 +195,7 @@ internal class AudibleRegister
             RequestedTokenType = new[] { "bearer", "mac_dms", "website_cookies", "store_authentication_cookie" },
             Cookies = new CookiesRequest
             {
-                WebsiteCookies = new object[0],
+                WebsiteCookies = new EmptyObject[0],
                 Domain = $".amazon.{authResult.Domain}"
             },
             RegistrationData = new RegistrationData
@@ -229,7 +231,7 @@ internal class AudibleRegister
             RequestedTokenType = new[] { "bearer", "mac_dms", "website_cookies", "store_authentication_cookie" },
             Cookies = new CookiesRequest
             {
-                WebsiteCookies = new object[0],
+                WebsiteCookies = new EmptyObject[0],
                 Domain = $".amazon.{_domain}"
             },
             RegistrationData = new RegistrationData

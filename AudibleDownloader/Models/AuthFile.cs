@@ -1,44 +1,45 @@
 ﻿using System.Collections.Generic;
-using System.Text.Json.Serialization;
 using AudibleDownloader.Models.Audible;
+using GaldrJson;
 
 namespace AudibleDownloader.Models;
 
+[GaldrJsonSerializable]
 internal class AuthFile
 {
-    [JsonPropertyName("website_cookies")]
+    [GaldrJsonPropertyName("website_cookies")]
     public Dictionary<string, string> WebsiteCookies { get; set; }
 
-    [JsonPropertyName("adp_token")]
+    [GaldrJsonPropertyName("adp_token")]
     public string AdpToken { get; set; }
 
-    [JsonPropertyName("access_token")]
+    [GaldrJsonPropertyName("access_token")]
     public string AccessToken { get; set; }
 
-    [JsonPropertyName("refresh_token")]
+    [GaldrJsonPropertyName("refresh_token")]
     public string RefreshToken { get; set; }
 
-    [JsonPropertyName("device_private_key")]
+    [GaldrJsonPropertyName("device_private_key")]
     public string DevicePrivateKey { get; set; }
 
-    [JsonPropertyName("store_authentication_cookie")]
+    [GaldrJsonPropertyName("store_authentication_cookie")]
     public StoreAuthenticationCookie StoreAuthenticationCookie { get; set; }
 
-    [JsonPropertyName("device_info")]
+    [GaldrJsonPropertyName("device_info")]
     public DeviceInfo DeviceInfo { get; set; }
 
-    [JsonPropertyName("customer_info")]
+    [GaldrJsonPropertyName("customer_info")]
     public CustomerInfo CustomerInfo { get; set; }
 
-    [JsonPropertyName("expires")]
+    [GaldrJsonPropertyName("expires")]
     public double Expires { get; set; }
 
-    [JsonPropertyName("locale_code")]
+    [GaldrJsonPropertyName("locale_code")]
     public string LocaleCode { get; set; }
 
-    [JsonPropertyName("with_username")]
+    [GaldrJsonPropertyName("with_username")]
     public bool WithUsername { get; set; }
 
-    [JsonPropertyName("activation_bytes")]
+    [GaldrJsonPropertyName("activation_bytes")]
     public string ActivationBytes { get; set; }
 }

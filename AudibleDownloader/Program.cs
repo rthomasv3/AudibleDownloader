@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using AudibleDownloader.Models;
 using AudibleDownloader.Models.Audible;
@@ -399,11 +397,11 @@ internal class Program
         if (File.Exists(config.SettingsPath))
         {
             string json = File.ReadAllText(config.SettingsPath);
-            return JsonSerializer.Deserialize<Config>(json, AudibleJsonContext.Default.Config);
+            return GaldrJson.GaldrJson.Deserialize<Config>(json);
         }
         else
         {
-            string json = JsonSerializer.Serialize(config, AudibleJsonContext.Default.Config);
+            string json = GaldrJson.GaldrJson.Serialize<Config>(config);
             File.WriteAllText(config.SettingsPath, json);
         }
 
@@ -412,20 +410,7 @@ internal class Program
 
     static void SaveConfig(Config config)
     {
-        string json = JsonSerializer.Serialize(config, AudibleJsonContext.Default.Config);
+        string json = GaldrJson.GaldrJson.Serialize<Config>(config);
         File.WriteAllText(config.SettingsPath, json);
     }
-}
-
-[JsonSerializable(typeof(AuthFile))]
-[JsonSerializable(typeof(RegistrationRequest))]
-[JsonSerializable(typeof(RegistrationResponse))]
-[JsonSerializable(typeof(RefreshTokenResponse))]
-[JsonSerializable(typeof(DeregisterRequest))]
-[JsonSerializable(typeof(DeregisterResponse))]
-[JsonSerializable(typeof(LibraryResponse))]
-[JsonSerializable(typeof(LibraryItemResponse))]
-[JsonSerializable(typeof(Config))]
-internal partial class AudibleJsonContext : JsonSerializerContext
-{
 }

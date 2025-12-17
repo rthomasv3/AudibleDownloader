@@ -1,9 +1,9 @@
-﻿using System.Text.Json.Serialization;
+﻿using GaldrJson;
 
 namespace AudibleDownloader.Models.Audible;
 
 internal class StoreAuthenticationCookie
 {
-    [JsonPropertyName("cookie")]
+    [GaldrJsonPropertyName("cookie")]
     public string Cookie { get; set; }
 }

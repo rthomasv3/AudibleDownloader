@@ -1,12 +1,12 @@
-﻿using System.Text.Json.Serialization;
+﻿using GaldrJson;
 
 namespace AudibleDownloader.Models.Audible;
 
 internal class SuccessResponse
 {
-    [JsonPropertyName("tokens")]
+    [GaldrJsonPropertyName("tokens")]
     public Tokens Tokens { get; set; }
 
-    [JsonPropertyName("extensions")]
+    [GaldrJsonPropertyName("extensions")]
     public Extensions Extensions { get; set; }
 }

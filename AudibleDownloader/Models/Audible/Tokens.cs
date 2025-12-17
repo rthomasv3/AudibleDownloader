@@ -1,18 +1,18 @@
-﻿using System.Text.Json.Serialization;
+﻿using GaldrJson;
 
 namespace AudibleDownloader.Models.Audible;
 
 internal class Tokens
 {
-    [JsonPropertyName("mac_dms")]
+    [GaldrJsonPropertyName("mac_dms")]
     public MacDmsToken MacDms { get; set; }
 
-    [JsonPropertyName("bearer")]
+    [GaldrJsonPropertyName("bearer")]
     public BearerToken Bearer { get; set; }
 
-    [JsonPropertyName("website_cookies")]
+    [GaldrJsonPropertyName("website_cookies")]
     public WebsiteCookie[] WebsiteCookies { get; set; }
 
-    [JsonPropertyName("store_authentication_cookie")]
+    [GaldrJsonPropertyName("store_authentication_cookie")]
     public StoreAuthenticationCookie StoreAuthenticationCookie { get; set; }
 }

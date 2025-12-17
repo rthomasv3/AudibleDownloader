@@ -1,5 +1,8 @@
-﻿namespace AudibleDownloader;
+﻿using GaldrJson;
 
+namespace AudibleDownloader;
+
+[GaldrJsonSerializable]
 internal class Config
 {
     public string AuthFilePath { get; set; }

@@ -1,15 +1,15 @@
-﻿using System.Text.Json.Serialization;
+﻿using GaldrJson;
 
 namespace AudibleDownloader.Models.Audible;
 
 internal class DeviceInfo
 {
-    [JsonPropertyName("device_name")]
+    [GaldrJsonPropertyName("device_name")]
     public string DeviceName { get; set; }
 
-    [JsonPropertyName("device_serial_number")]
+    [GaldrJsonPropertyName("device_serial_number")]
     public string DeviceSerialNumber { get; set; }
 
-    [JsonPropertyName("device_type")]
+    [GaldrJsonPropertyName("device_type")]
     public string DeviceType { get; set; }
 }

@@ -1,12 +1,12 @@
-﻿using System.Text.Json.Serialization;
+﻿using GaldrJson;
 
 namespace AudibleDownloader.Models.Audible;
 
 internal class MacDmsToken
 {
-    [JsonPropertyName("adp_token")]
+    [GaldrJsonPropertyName("adp_token")]
     public string AdpToken { get; set; }
 
-    [JsonPropertyName("device_private_key")]
+    [GaldrJsonPropertyName("device_private_key")]
     public string DevicePrivateKey { get; set; }
 }

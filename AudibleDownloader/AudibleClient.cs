@@ -1,9 +1,4 @@
-﻿using AAXClean;
-using AudibleDownloader.Enums;
-using AudibleDownloader.Models;
-using AudibleDownloader.Models.Audible;
-using GaldrJson;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -12,6 +7,11 @@ using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using AAXClean;
+using AudibleDownloader.Enums;
+using AudibleDownloader.Models;
+using AudibleDownloader.Models.Audible;
+using GaldrJson;
 
 namespace AudibleDownloader;
 

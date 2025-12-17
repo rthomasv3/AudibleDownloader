@@ -1,21 +1,22 @@
-﻿using System.Text.Json.Serialization;
+﻿using GaldrJson;
 
 namespace AudibleDownloader.Models.Audible;
 
+[GaldrJsonSerializable]
 internal class RegistrationRequest
 {
-    [JsonPropertyName("requested_token_type")]
+    [GaldrJsonPropertyName("requested_token_type")]
     public string[] RequestedTokenType { get; set; }
 
-    [JsonPropertyName("cookies")]
+    [GaldrJsonPropertyName("cookies")]
     public CookiesRequest Cookies { get; set; }
 
-    [JsonPropertyName("registration_data")]
+    [GaldrJsonPropertyName("registration_data")]
     public RegistrationData RegistrationData { get; set; }
 
-    [JsonPropertyName("auth_data")]
+    [GaldrJsonPropertyName("auth_data")]
     public AuthData AuthData { get; set; }
 
-    [JsonPropertyName("requested_extensions")]
+    [GaldrJsonPropertyName("requested_extensions")]
     public string[] RequestedExtensions { get; set; }
 }
