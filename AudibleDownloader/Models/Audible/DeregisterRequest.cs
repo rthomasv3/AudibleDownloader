@@ -1,9 +1,10 @@
-﻿using System.Text.Json.Serialization;
+﻿using GaldrJson;
 
 namespace AudibleDownloader.Models.Audible;
 
+[GaldrJsonSerializable]
 internal class DeregisterRequest
 {
-    [JsonPropertyName("deregister_all_existing_accounts")]
+    [GaldrJsonPropertyName("deregister_all_existing_accounts")]
     public bool DeregisterAllExistingAccounts { get; set; }
 }

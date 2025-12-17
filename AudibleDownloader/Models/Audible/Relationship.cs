@@ -1,18 +1,18 @@
-﻿using System.Text.Json.Serialization;
+﻿using GaldrJson;
 
 namespace AudibleDownloader.Models.Audible;
 
 internal class Relationship
 {
-    [JsonPropertyName("asin")]
+    [GaldrJsonPropertyName("asin")]
     public string Asin { get; set; }
 
-    [JsonPropertyName("relationship_type")]
+    [GaldrJsonPropertyName("relationship_type")]
     public string RelationshipType { get; set; }
 
-    [JsonPropertyName("relationship_to_product")]
+    [GaldrJsonPropertyName("relationship_to_product")]
     public string RelationshipToProduct { get; set; }
 
-    [JsonPropertyName("sort")]
+    [GaldrJsonPropertyName("sort")]
     public string Sort { get; set; }
 }

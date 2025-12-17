@@ -1,9 +1,10 @@
-﻿using System.Text.Json.Serialization;
+﻿using GaldrJson;
 
 namespace AudibleDownloader.Models.Audible;
 
+[GaldrJsonSerializable]
 internal class LibraryResponse
 {
-    [JsonPropertyName("items")]
+    [GaldrJsonPropertyName("items")]
     public LibraryItem[] Items { get; set; }
 }

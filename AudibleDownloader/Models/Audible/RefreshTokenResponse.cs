@@ -1,12 +1,13 @@
-﻿using System.Text.Json.Serialization;
+﻿using GaldrJson;
 
 namespace AudibleDownloader.Models.Audible;
 
+[GaldrJsonSerializable]
 internal class RefreshTokenResponse
 {
-    [JsonPropertyName("access_token")]
+    [GaldrJsonPropertyName("access_token")]
     public string AccessToken { get; set; }
 
-    [JsonPropertyName("expires_in")]
+    [GaldrJsonPropertyName("expires_in")]
     public int ExpiresIn { get; set; }
 }

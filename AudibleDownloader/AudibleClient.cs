@@ -1,4 +1,9 @@
-﻿using System;
+﻿using AAXClean;
+using AudibleDownloader.Enums;
+using AudibleDownloader.Models;
+using AudibleDownloader.Models.Audible;
+using GaldrJson;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -6,12 +11,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
-using AAXClean;
-using AudibleDownloader.Enums;
-using AudibleDownloader.Models;
-using AudibleDownloader.Models.Audible;
 
 namespace AudibleDownloader;
 
@@ -24,6 +24,7 @@ internal class AudibleClient : IDisposable
     private readonly string _apiUrl;
     private RSA _rsaKey;
     private readonly AuthManager _authManager;
+    private readonly IGaldrJsonSerializer _galdrJson;
 
     private ConcurrentDictionary<string, DownloadBookProgressResult> _downloadProgress = new();
 
@@ -31,9 +32,10 @@ internal class AudibleClient : IDisposable
 
     #region Constructor(s)
 
-    public AudibleClient(AuthManager authManager)
+    public AudibleClient(AuthManager authManager, IGaldrJsonSerializer galdrJson)
     {
         _authManager = authManager;
+        _galdrJson = galdrJson;
 
         AuthFile auth = _authManager.GetAuthFile();
 
@@ -97,7 +99,7 @@ internal class AudibleClient : IDisposable
             };
 
             string responseJson = await GetAsync("1.0/library", parameters);
-            LibraryResponse response = JsonSerializer.Deserialize(responseJson, AudibleJsonContext.Default.LibraryResponse);
+            LibraryResponse response = _galdrJson.Deserialize<LibraryResponse>(responseJson);
 
             if (response?.Items == null || response.Items.Length == 0)
             {
@@ -131,7 +133,7 @@ internal class AudibleClient : IDisposable
         };
 
         string responseJson = await GetAsync($"1.0/library/{asin}", parameters);
-        LibraryItemResponse response = JsonSerializer.Deserialize(responseJson, AudibleJsonContext.Default.LibraryItemResponse);
+        LibraryItemResponse response = _galdrJson.Deserialize<LibraryItemResponse>(responseJson);
 
         return response?.Item;
     }
@@ -262,7 +264,7 @@ internal class AudibleClient : IDisposable
             DeregisterAllExistingAccounts = deregisterAll
         };
 
-        string jsonBody = JsonSerializer.Serialize(requestBody, AudibleJsonContext.Default.DeregisterRequest);
+        string jsonBody = _galdrJson.Serialize<DeregisterRequest>(requestBody);
 
         HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, url);
         request.Content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
@@ -273,7 +275,7 @@ internal class AudibleClient : IDisposable
 
         response.EnsureSuccessStatusCode();
 
-        DeregisterResponse deregisterResponse = JsonSerializer.Deserialize(responseBody, AudibleJsonContext.Default.DeregisterResponse);
+        DeregisterResponse deregisterResponse = _galdrJson.Deserialize<DeregisterResponse>(responseBody);
 
         return deregisterResponse;
     }
@@ -504,7 +506,7 @@ internal class AudibleClient : IDisposable
         response.EnsureSuccessStatusCode();
 
         string responseBody = await response.Content.ReadAsStringAsync();
-        RefreshTokenResponse refreshResponse = JsonSerializer.Deserialize(responseBody, AudibleJsonContext.Default.RefreshTokenResponse);
+        RefreshTokenResponse refreshResponse = _galdrJson.Deserialize<RefreshTokenResponse>(responseBody);
 
         if (refreshResponse == null)
         {
@@ -545,23 +547,6 @@ internal class AudibleClient : IDisposable
         return responseBody;
     }
 
-    private async Task<string> PostAsync(string path, object body)
-    {
-        string url = BuildApiUrl(path);
-        string jsonBody = JsonSerializer.Serialize(body);
-        byte[] bodyBytes = Encoding.UTF8.GetBytes(jsonBody);
-
-        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, url);
-        request.Content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
-
-        SignRequest(request, bodyBytes);
-
-        HttpResponseMessage response = await _httpClient.SendAsync(request);
-        response.EnsureSuccessStatusCode();
-
-        string responseBody = await response.Content.ReadAsStringAsync();
-        return responseBody;
-    }
 
     private void SignRequest(HttpRequestMessage request, byte[] body)
     {

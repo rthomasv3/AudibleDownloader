@@ -1,9 +1,14 @@
-﻿using System.Text.Json.Serialization;
+﻿using GaldrJson;
 
 namespace AudibleDownloader.Models.Audible;
 
 internal class DeregisterResponseWrapper
 {
-    [JsonPropertyName("success")]
-    public object Success { get; set; }
+    [GaldrJsonPropertyName("success")]
+    public DeregisterSuccess Success { get; set; }
+}
+
+internal class DeregisterSuccess
+{
+    
 }

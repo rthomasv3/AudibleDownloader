@@ -1,12 +1,12 @@
-﻿using System.Text.Json.Serialization;
+﻿using GaldrJson;
 
 namespace AudibleDownloader.Models.Audible;
 
 internal class Narrator
 {
-    [JsonPropertyName("asin")]
+    [GaldrJsonPropertyName("asin")]
     public string Asin { get; set; }
 
-    [JsonPropertyName("name")]
+    [GaldrJsonPropertyName("name")]
     public string Name { get; set; }
 }

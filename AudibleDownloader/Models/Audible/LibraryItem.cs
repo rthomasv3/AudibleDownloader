@@ -1,49 +1,49 @@
-﻿using System.Collections.Generic;
-using System.Text.Json.Serialization;
+﻿using GaldrJson;
+using System.Collections.Generic;
 
 namespace AudibleDownloader.Models.Audible;
 
 internal class LibraryItem
 {
-    [JsonPropertyName("asin")]
+    [GaldrJsonPropertyName("asin")]
     public string Asin { get; set; }
 
-    [JsonPropertyName("title")]
+    [GaldrJsonPropertyName("title")]
     public string Title { get; set; }
 
-    [JsonPropertyName("subtitle")]
+    [GaldrJsonPropertyName("subtitle")]
     public string Subtitle { get; set; }
 
-    [JsonPropertyName("authors")]
+    [GaldrJsonPropertyName("authors")]
     public Author[] Authors { get; set; }
 
-    [JsonPropertyName("narrators")]
+    [GaldrJsonPropertyName("narrators")]
     public Narrator[] Narrators { get; set; }
 
-    [JsonPropertyName("relationships")]
+    [GaldrJsonPropertyName("relationships")]
     public Relationship[] Relationships { get; set; }
 
-    [JsonPropertyName("runtime_length_min")]
+    [GaldrJsonPropertyName("runtime_length_min")]
     public int RuntimeLengthMin { get; set; }
 
-    [JsonPropertyName("purchase_date")]
+    [GaldrJsonPropertyName("purchase_date")]
     public string PurchaseDate { get; set; }
 
-    [JsonPropertyName("release_date")]
+    [GaldrJsonPropertyName("release_date")]
     public string ReleaseDate { get; set; }
 
-    [JsonPropertyName("product_images")]
+    [GaldrJsonPropertyName("product_images")]
     public Dictionary<string, string> ProductImages { get; set; }
 
-    [JsonPropertyName("available_codecs")]
+    [GaldrJsonPropertyName("available_codecs")]
     public AvailableCodec[] AvailableCodecs { get; set; }
 
-    [JsonPropertyName("merchandising_summary")]
+    [GaldrJsonPropertyName("merchandising_summary")]
     public string MerchandisingSummary { get; set; }
 
-    [JsonPropertyName("is_playable")]
+    [GaldrJsonPropertyName("is_playable")]
     public bool IsPlayable { get; set; }
 
-    [JsonPropertyName("series")]
+    [GaldrJsonPropertyName("series")]
     public Series[] Series { get; set; }
 }
