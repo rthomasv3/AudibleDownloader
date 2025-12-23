@@ -258,7 +258,10 @@ internal class Program
                 string path = await audibleMerger.MergeBookAsync(libraryEntry.Asin, libraryEntry.Directory, trimParts, deleteParts);
                 success = !String.IsNullOrEmpty(path) && File.Exists(path);
             }
-            catch { }
+            catch
+            {
+                // TODO: Add Logging
+            }
 
             return new MergeBookResult()
             {

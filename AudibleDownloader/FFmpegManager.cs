@@ -71,12 +71,26 @@ internal class FFmpegManager
     {
         string rid = RuntimeInformation.RuntimeIdentifier;
 
-        if (!_platformUrls.TryGetValue(rid, out var url))
-            throw new PlatformNotSupportedException($"Platform {rid} is not supported");
+        if (!_platformUrls.TryGetValue(rid, out string url))
+        {
+            if (OperatingSystem.IsLinux())
+            {
+                rid = "linux-x64";
+            }
+            else if (OperatingSystem.IsMacOS())
+            {
+                rid = "osx-x64";
+            }
+
+            if (!_platformUrls.TryGetValue(rid, out url))
+            {
+                throw new PlatformNotSupportedException($"Platform {rid} is not supported");
+            }
+        }
 
         Directory.CreateDirectory(_ffmpegDirectory);
 
-        using HttpClient httpClient = new HttpClient();
+        using HttpClient httpClient = new();
 
         progressCallback?.Invoke(0.0);
 

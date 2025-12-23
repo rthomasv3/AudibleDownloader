@@ -31,18 +31,26 @@ internal class AuthManager
         _config = config;
         _galdrJson = galdrJson;
 
-        _credentialStore = CredentialManager.Create(_storeName);
-        ICredential credential = _credentialStore.Get(_serviceName, _userName);
+        _credentialStore = GetCredentialStore();
 
-        if (credential != null)
+        try
         {
-            _encryptionKey = Convert.FromBase64String(credential.Password);
+            ICredential credential = _credentialStore.Get(_serviceName, _userName);
+
+            if (credential != null)
+            {
+                _encryptionKey = Convert.FromBase64String(credential.Password);
+            }
+            else
+            {
+                _encryptionKey = GenerateKey();
+                string keyBase64 = Convert.ToBase64String(_encryptionKey);
+                _credentialStore.AddOrUpdate(_serviceName, _userName, keyBase64);
+            }
         }
-        else
+        catch
         {
-            _encryptionKey = GenerateKey();
-            string keyBase64 = Convert.ToBase64String(_encryptionKey);
-            _credentialStore.AddOrUpdate(_serviceName, _userName, keyBase64);
+            // TODO: Add logging
         }
     }
 
@@ -72,6 +80,40 @@ internal class AuthManager
     #endregion
 
     #region Private Methods
+
+    private static ICredentialStore GetCredentialStore()
+    {
+        ICredentialStore credentialStore = null;
+
+        if (OperatingSystem.IsLinux())
+        {
+            Environment.SetEnvironmentVariable("GCM_CREDENTIAL_STORE", "secretservice");
+
+            try
+            {
+                credentialStore = CredentialManager.Create(_storeName);
+            }
+            catch
+            {
+                Environment.SetEnvironmentVariable("GCM_CREDENTIAL_STORE", "gpg");
+
+                try
+                {
+                    credentialStore = CredentialManager.Create(_storeName);
+                }
+                catch
+                {
+                    // TODO: Add logging
+                }
+            }
+        }
+        else
+        {
+            credentialStore = CredentialManager.Create(_storeName);
+        }
+
+        return credentialStore;
+    }
 
     private static byte[] GenerateKey()
     {

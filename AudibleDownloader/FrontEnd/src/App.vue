@@ -8,6 +8,7 @@ import SettingsDialog from "./components/SettingsDialog.vue";
 const router = useRouter();
 const route = useRoute();
 
+const inititalized = ref(false);
 const isLoggedIn = ref(false);
 const deviceName = ref(false);
 const settingsVisible = ref(false);
@@ -37,6 +38,8 @@ onBeforeMount(async () => {
       await router.push("/login");
     }
   }
+  
+  inititalized.value = true;
 });
 
 function onLogout() {
@@ -66,7 +69,7 @@ function onLibraryPathUpdated(libraryPath) {
     </div>
 
     <div class="layout-content">
-      <RouterView />
+      <RouterView v-if="inititalized" />
     </div>
 
     <SettingsDialog v-model:visible="settingsVisible" @logout="onLogout" @libraryPathUpdated="onLibraryPathUpdated" />
